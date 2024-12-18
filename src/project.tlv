@@ -52,8 +52,9 @@
          $out[3:0] = $reset ? 4'b0 :
                   ! $valid ? >>1$out :
                     $avg[3:0];
-         $digit[3:0] = $out[3:0];
+         
       @2 
+         $digit[3:0] = $out[3:0];
          *uo_out =
             $digit == 4'h0 ? 8'b00111111 :
             $digit == 4'h1 ? 8'b00000110 :
@@ -83,12 +84,11 @@ module top(input logic clk, input logic reset, input logic [31:0] cyc_cnt, outpu
    // Tiny tapeout I/O signals.
    logic [7:0] ui_in, uio_in, uo_out, uio_out, uio_oe;
    logic [31:0] r;
-   always @(negedge clk) r = m5_if_defined_as(MAKERCHIP, 1, ['$urandom()'], ['0']);
+   always @(edge clk) r = m5_if_defined_as(MAKERCHIP, 1, ['$urandom()'], ['0']);
    assign ui_in = r[7:0];
    assign uio_in = r[15:8];
    logic ena = 1'b0;
    logic rst_n = ! reset;
-
 
    /*
    // Or, to provide specific inputs at specific times...

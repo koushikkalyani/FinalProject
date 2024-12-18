@@ -89,6 +89,7 @@ module top(input logic clk, input logic reset, input logic [31:0] cyc_cnt, outpu
    logic ena = 1'b0;
    logic rst_n = ! reset;
 
+
    /*
    // Or, to provide specific inputs at specific times...
    // BE SURE TO COMMENT THE ASSIGNMENT OF INPUTS ABOVE.

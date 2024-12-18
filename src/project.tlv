@@ -48,13 +48,13 @@
          $enter = *ui_in[7];
          $num[3:0] = *ui_in[3:0];
          $valid = $enter && ! >>1$enter;
-         $sample1[3:0] =  $num ;          // Current input sample
-         $sample2[3:0] = >>1$sample1;     // Previous sample
-         $sample3[3:0] = >>1$sample2;     // Two cycles back
-         $sum[5:0] = ({2'b0, $sample1} + {2'b0, $sample2} + {2'b0, $sample3});  // 3 samples sum
+         $sample[3:0] =  $num ;          // Current input sample
+         //$sample2[3:0] = >>1$sample1;     // Previous sample
+         //$sample3[3:0] = >>1$sample2;     // Two cycles back
+         $sum[5:0] = ({2'b0, $sample} + {2'b0, >>1$sample} + {2'b0, >>2$sample});  // 3 samples sum
          $avg_calc[5:0] = $sum / 3;
          $avg[3:0] = $valid ? $avg_calc[3:0] : >>1$avg ;// Divide by 3 
-      @1
+      @0
          $out[3:0] = $reset ? 4'b0 :
                   ! $valid ? >>1$out :
                     $avg[3:0];
@@ -82,7 +82,7 @@
    
    
    // Connect Tiny Tapeout outputs. Note that uio_ outputs are not available in the Tiny-Tapeout-3-based FPGA boards.
-   *uo_out = 8'b0;
+   //*uo_out = 8'b0;
    m5_if_neq(m5_target, FPGA, ['*uio_out = 8'b0;'])
    m5_if_neq(m5_target, FPGA, ['*uio_oe = 8'b0;'])
 
@@ -93,7 +93,7 @@
    // Instantiate the Virtual FPGA Lab.
    m5+board(/top, /fpga, 7, $, , my_design)
    // Label the switch inputs [0..7] (1..8 on the physical switch panel) (top-to-bottom).
-   m5+tt_input_labels_viz(['"UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"'])
+   m5+tt_input_labels_viz(['"DATA[0]", "DATA[1]", "DATA[2]", "DATA[4]",,,, "EQUALS"'])
 
 \SV
 

@@ -39,53 +39,29 @@
    // Include Tiny Tapeout Lab.
    m4_include_lib(https:/['']/raw.githubusercontent.com/os-fpga/Virtual-FPGA-Lab/5744600215af09224b7235479be84c30c6e50cb7/tlv_lib/tiny_tapeout_lib.tlv)
    // Calculator VIZ.
-   m4_include_lib(https:/['']/raw.githubusercontent.com/efabless/chipcraft---mest-course/main/tlv_lib/calculator_shell_lib.tlv)
+  // m4_include_lib(https:/['']/raw.githubusercontent.com/efabless/chipcraft---mest-course/main/tlv_lib/calculator_shell_lib.tlv)
 
-\TLV calc()
+\TLV ma()
    
-   |calc
+   |ma
       @0
          $reset = *reset;
-         //Board's switch inputs
-         $op[2:0] = *ui_in[6:4];
-         $val2[7:0] = {4'b0, *ui_in[3:0]};
-         $equals_in = *ui_in[7];
-         
+         $enter = *ui_in[7];
+         $num[3:0] = *ui_in[3:0];
+         $valid = $enter && ! >>1$enter;
+         $sample1[3:0] =  $num ;          // Current input sample
+         $sample2[3:0] = >>1$sample1;     // Previous sample
+         $sample3[3:0] = >>1$sample2;     // Two cycles back
+         $sum[5:0] = ({2'b0, $sample1} + {2'b0, $sample2} + {2'b0, $sample3});  // 3 samples sum
+         $avg_calc[5:0] = $sum / 3;
+         $avg[3:0] = $valid ? $avg_calc[3:0] : >>1$avg ;// Divide by 3 
       @1
-         // Calculator result value ($out) becomes first operand ($val1).
-         $val1[7:0] = >>2$out;
-         
-         // Perform a valid computation when "=" button is pressed.
-         $valid = $reset ? 1'b0 :
-                           $equals_in && ! <<1$equals_in;
-         ?$valid
-            // Calculate (all possible operations).
-            $sum[7:0] = $val1 + $val2;
-            $diff[7:0] = $val1 - $val2;
-            $prod[7:0] = $val1 * $val2;
-            $quot[7:0] = $val1 / $val2;
-         
-         // Select the result value, resetting to 0, and retaining if no calculation.
-      @2
-         $out[7:0] = $reset ? 8'b0 :
+         $out[3:0] = $reset ? 4'b0 :
                   ! $valid ? >>1$out :
-                  ($op[2:0] == 3'b000) ? $sum  :
-                  ($op[2:0] == 3'b001) ? $diff :
-                  ($op[2:0] == 3'b010) ? $prod :
-                  ($op[2:0] == 3'b011) ? $quot :
-                  ($op[2:0] == 3'b100) ? >>2$mem[7:0]:
-                  ($op[2:0] == 3'b101) ? >>1$out:
-                                         8'd0;
-         $mem[7:0] = 
-               $reset
-                  ? 8'b0 :
-               $valid && ($op == 3'b101)
-                  ? >>2$out :
-                  //default
-                    >>1$mem;
-      // Display lower hex digit on 7-segment display.
-         $digit[3:0] = $out[3:0];
-      @3 
+                    $avg[3:0];
+         
+      @2 
+         $digit[3:0] = $out[3:0]; 
          *uo_out =
             $digit == 4'h0 ? 8'b00111111 :
             $digit == 4'h1 ? 8'b00000110 :
@@ -166,13 +142,13 @@ module m5_user_module_name (
    // Connect Tiny Tapeout I/Os to Virtual FPGA Lab.
    m5+tt_connections()
    // Instantiate the Virtual FPGA Lab.
-   m5+board(/top, /fpga, 7, $, , calc)
+   m5+board(/top, /fpga, 7, $, , ma)
    // Label the switch inputs [0..7] (1..8 on the physical switch panel) (top-to-bottom).
    m5_if(m5_in_fpga, ['m5+tt_input_labels_viz(['"Value[0]", "Value[1]", "Value[2]", "Value[3]", "Op[0]", "Op[1]", "Op[2]", "="'])'])
 
 \TLV
    /* verilator lint_off UNOPTFLAT */
-   m5_if(m5_in_fpga, ['m5+tt_lab()'], ['m5+calc()'])
+   m5_if(m5_in_fpga, ['m5+tt_lab()'], ['m5+ma()'])
 
 \SV
 endmodule

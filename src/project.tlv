@@ -56,11 +56,11 @@
       @0 
          $reset = *reset;
          $num[3:0] = *ui_in[3:0];
-         $equal = $num == 4'b1101 ;
-         $valid = !>>1$equal && $equal ;
+         $equal = $num == 4'b1101 ;   
+         //$valid = >>1$equal && !$equal ;
          $valid_data =  !$equal ;   //  input sample
          $sample[3:0] = $valid_data ? $num : 4'b1111 ;
-         ?$valid
+         ?$equal
             
                
             $sum[5:0] = ({2'b0, >>1$sample} + {2'b0, >>2$sample} + {2'b0, >>3$sample});  // 3 samples sum

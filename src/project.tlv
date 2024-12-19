@@ -72,7 +72,7 @@
       @1
          
          m5+sseg_decoder($segments_n, /keypad$digit_pressed[3:0])
-         *uo_out[7:0] = {1'b0 , ~ $segments_n} ;
+         //*uo_out[7:0] = {1'b0 , ~ $segments_n} ;
          *uo_out = /keypad$sampling ? {4'b0, /keypad$sample_row_mask} : {1'b0 , ~ $segments_n};
    // Note that pipesignals assigned here can be found under /fpga_pins/fpga.
    
@@ -80,7 +80,7 @@
    
    
    // Connect Tiny Tapeout outputs. Note that uio_ outputs are not available in the Tiny-Tapeout-3-based FPGA boards.
-   //*uo_out = 8'b0;
+   *uo_out = 8'b0;
    m5_if_neq(m5_target, FPGA, ['*uio_out = 8'b0;'])
    m5_if_neq(m5_target, FPGA, ['*uio_oe = 8'b0;'])
 

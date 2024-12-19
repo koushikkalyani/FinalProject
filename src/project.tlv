@@ -69,7 +69,7 @@
          
          
       m5+PmodKYPD(|pipe, /keypad, @0, $num[3:0], 1'b1, ['left:40, top: 80, width: 20, height: 20'])
-      @1
+      @2
          
          m5+sseg_decoder($segments_n, $out[3:0])
          //*uo_out[7:0] = {1'b0 , ~ $segments_n} ;

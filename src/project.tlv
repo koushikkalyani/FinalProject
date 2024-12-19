@@ -43,16 +43,20 @@
       @0
          $reset = *reset;
          $num[2:0] = *random_number;
-         //$enter = $num[0];
-         //$valid = $enter && ! >>1$enter;
+         $equals_in = *ui_in[7];
+         $valid = $reset ? 1'b0 :
+                           $equals_in && ! >>1$equals_in;
          $sample[2:0] =  $num ;          // Current input sample
-         $sum[4:0] = ({2'b0, $sample} + {2'b0, >>1$sample} + {2'b0, >>2$sample});  // 3 samples sum
-         $avg_calc[4:0] = $sum / 3;
-         $avg[2:0] = $avg_calc[2:0] ;// Divide by 3 
-         $out[2:0] = $reset ? 2'b0 :
-                    $avg[2:0];
-         $digit[3:0] = {1'b0,$out} ;
+         ?$valid
+            $sum[4:0] = ({2'b0, $sample} + {2'b0, >>1$sample} );  // 3 samples sum
+            $avg_calc[4:0] = $sum / 2 ;
+            $avg[2:0] = $avg_calc[2:0] ;// Divide by 3
+            
       @1
+         $out[2:0] = $reset ? 2'b0 :
+                     !$valid ? >>1$avg:$avg[2:0];
+         $digit[3:0] = {1'b0,$out} ;
+      @2   
          *uo_out =
             $digit == 4'h0 ? 8'b00111111 :
             $digit == 4'h1 ? 8'b00000110 :
@@ -170,14 +174,16 @@ module m5_user_module_name (
    logic feed_back;
    logic [2:0]lfsr;
    
-   assign feed_back = !(lfsr[2] ^ lfsr[0] | lfsr[2]) ;
+   assign feed_back = lfsr[2]^ lfsr[0] ;
    assign random_number = lfsr;  
-   initial lfsr = 3'd0;
+   
+   initial lfsr = 3'd1;
+   
 	always @(posedge clk) begin
       	if(reset)
-            lfsr <= 3'd5;
+            lfsr <= 3'd1;
          else
-            lfsr <= ({lfsr[0] , feed_back});
+            lfsr <= {lfsr[1:0] , feed_back};
    end
    
 

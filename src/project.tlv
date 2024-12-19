@@ -59,7 +59,7 @@
          $sample[3:0] =  $num ;   //  input sample
          $sum[5:0] = ({2'b0, >>1$sample} + {2'b0, >>2$sample} + {2'b0, >>3$sample});  // 3 samples sum
          $avg_calc[5:0] = $sum / 3;
-         $avg[3:0] = $num == 4'b1101 ? $avg_calc[3:0] : >>1$avg ;// Divide by 3 
+         $avg[3:0] = $num ? $avg_calc[3:0] : >>1$avg ;// Divide by 3 
          ?$num == 4'b1101
             $out[3:0] = $reset ? 4'b0  : $avg[3:0];
             

@@ -32,42 +32,46 @@
    // If debouncing, a user's module is within a wrapper, so it has a different name.
    var(user_module_name, m5_if(m5_debounce_inputs, my_design, m5_my_design))
    var(debounce_cnt, m5_if_defined_as(MAKERCHIP, 1, 8'h03, 8'hff))
-   //m5_var(MAKERCHIP, 0)
-   if_def(MAKERCHIP, , ['m5_var(MAKERCHIP, 0)'])
 
 \SV
    // Include Tiny Tapeout Lab.
    m4_include_lib(['https:/']['/raw.githubusercontent.com/os-fpga/Virtual-FPGA-Lab/5744600215af09224b7235479be84c30c6e50cb7/tlv_lib/tiny_tapeout_lib.tlv'])
-   m4_include_lib(https://raw.githubusercontent.com/stevehoover/gian-course/9ce47c64c435ae69c2d2c3733f86abfe158d8276/reference_designs/PmodKYPD.tlv)
-
 
 
 \TLV my_design()
-   
-   
-   
-   // ==================
-   // |                |
-   // | YOUR CODE HERE |
-   // |                |
-   // ==================
-   
-   |pipe
-      @0 
+   |ma
+      @0
          $reset = *reset;
-         
-        
-         $num[3:0] = *ui_in[3:0];
-         
-      m5+PmodKYPD(|pipe, /keypad, @0, $num[3:0], 1'b1, ['left:40, top: 80, width: 20, height: 20'])
+         $num[2:0] = *random_number;
+         //$enter = $num[0];
+         //$valid = $enter && ! >>1$enter;
+         $sample[2:0] =  $num ;          // Current input sample
+         $sum[4:0] = ({2'b0, $sample} + {2'b0, >>1$sample} + {2'b0, >>2$sample});  // 3 samples sum
+         $avg_calc[4:0] = $sum / 3;
+         $avg[2:0] = $avg_calc[2:0] ;// Divide by 3 
+         $out[2:0] = $reset ? 2'b0 :
+                    $avg[2:0];
+         $digit[3:0] = {1'b0,$out} ;
       @1
-         
-         m5+sseg_decoder($segments_n, /keypad$digit_pressed[3:0])
-         //*uo_out[7:0] = {1'b0 , ~ $segments_n} ;
-         *uo_out = /keypad$sampling ? {4'b0, /keypad$sample_row_mask} : {1'b0 , ~ $segments_n};
-   // Note that pipesignals assigned here can be found under /fpga_pins/fpga.
-   
-   
+         *uo_out =
+            $digit == 4'h0 ? 8'b00111111 :
+            $digit == 4'h1 ? 8'b00000110 :
+            $digit == 4'h2 ? 8'b01011011 :
+            $digit == 4'h3 ? 8'b01001111 :
+            $digit == 4'h4 ? 8'b01100110 :
+            $digit == 4'h5 ? 8'b01101101 :
+            $digit == 4'h6 ? 8'b01111101 :
+            $digit == 4'h7 ? 8'b00000111 :
+            $digit == 4'h8 ? 8'b01111111 :
+            $digit == 4'h9 ? 8'b01101111 :
+            $digit == 4'hA ? 8'b01110111 :
+            $digit == 4'hB ? 8'b01111100 :
+            $digit == 4'hC ? 8'b00111001 :
+            $digit == 4'hD ? 8'b01011110 :
+            $digit == 4'hE ? 8'b01111001 :
+                             8'b01110001;
+         //m5+sseg_decoder($segments_n, {2'b0,$out})
+         //*uo_out = ~$segments_n ;
    
    
    // Connect Tiny Tapeout outputs. Note that uio_ outputs are not available in the Tiny-Tapeout-3-based FPGA boards.
@@ -82,7 +86,7 @@
    // Instantiate the Virtual FPGA Lab.
    m5+board(/top, /fpga, 7, $, , my_design)
    // Label the switch inputs [0..7] (1..8 on the physical switch panel) (top-to-bottom).
-   m5+tt_input_labels_viz(['"UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED", "UNUSED"'])
+   m5+tt_input_labels_viz(['"DATA[0]", "DATA[1]", "DATA[2]", "DATA[4]",,,, "EQUALS"'])
 
 \SV
 
@@ -162,6 +166,20 @@ module m5_user_module_name (
    // your Verilog logic goes here.
    // Note, output assignments are in my_design.
    // ==========================================
+   logic [2:0] random_number;
+   logic feed_back;
+   logic [2:0]lfsr;
+   
+   assign feed_back = !(lfsr[2] ^ lfsr[0] | lfsr[2]) ;
+   assign random_number = lfsr;  
+   initial lfsr = 3'd0;
+	always @(posedge clk) begin
+      	if(reset)
+            lfsr <= 3'd5;
+         else
+            lfsr <= ({lfsr[0] , feed_back});
+   end
+   
 
 \SV
 endmodule

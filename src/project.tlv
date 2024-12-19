@@ -56,21 +56,18 @@
       @0 
          $reset = *reset;
          $num[3:0] = *ui_in[3:0];
-         $sample[3:0] =  $num ;          // Current input sample
-         //$sample2[3:0] = >>1$sample1;     // Previous sample
-         //$sample3[3:0] = >>1$sample2;     // Two cycles back
-      @1
-         $sum[5:0] = ({2'b0, $sample} + {2'b0, >>1$sample} + {2'b0, >>2$sample});  // 3 samples sum
+         $sample[3:0] =  $num ;   //  input sample
+         $sum[5:0] = ({2'b0, >>1$sample} + {2'b0, >>2$sample} + {2'b0, >>3$sample});  // 3 samples sum
          $avg_calc[5:0] = $sum / 3;
-         $avg[3:0] = $num ? $avg_calc[3:0] : >>1$avg ;// Divide by 3 
-         ?$num       
+         $avg[3:0] = $num == 4'b1101 ? $avg_calc[3:0] : >>1$avg ;// Divide by 3 
+         ?$num == 4'b1101
             $out[3:0] = $reset ? 4'b0  : $avg[3:0];
             
          
          
       m5+PmodKYPD(|pipe, /keypad, @0, $num[3:0], 1'b1, ['left:40, top: 80, width: 20, height: 20'])
-      @2
-         
+      
+      @1
          m5+sseg_decoder($segments_n, $out[3:0])
          //*uo_out[7:0] = {1'b0 , ~ $segments_n} ;
          *uo_out = /keypad$sampling ? {4'b0, /keypad$sample_row_mask} : {1'b0 , ~ $segments_n};

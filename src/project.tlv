@@ -66,7 +66,7 @@
             $sum[5:0] = ({2'b0, >>1$sample} + {2'b0, >>2$sample} + {2'b0, >>3$sample});  // 3 samples sum
             $avg_calc[5:0] = $sum / 3;
             $avg[3:0] = $avg_calc[3:0] ;// Divide by 3
-            $out[3:0] = $reset ? 4'b0 :( $valid ? $avg[3:0] : >>1$avg);
+            $out[3:0] = $reset ? 4'b0 : $avg[3:0] ;
             m5+sseg_decoder($segments_n, $out[3:0])
             *uo_out = /keypad$sampling ? {4'b0, /keypad$sample_row_mask} : {1'b0 , ~ $segments_n};
   

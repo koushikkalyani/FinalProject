@@ -56,23 +56,25 @@
       @0 
          $reset = *reset;
          $num[3:0] = *ui_in[3:0];
-         $equal = $num == 4'b1101 ; 
+         $equal = $num == 4'b1101 ;
          $valid = !>>1$equal && $equal ;
          $valid_data =  !$equal ;   //  input sample
-         $sample[3:0] = $valid_data ? $num : 4'b0 ; 
+         $sample[3:0] = $valid_data ? $num : 4'b1111 ;
          ?$valid
+            
+               
             $sum[5:0] = ({2'b0, >>1$sample} + {2'b0, >>2$sample} + {2'b0, >>3$sample});  // 3 samples sum
             $avg_calc[5:0] = $sum / 3;
-            $avg[3:0] = $avg_calc[3:0] ;// Divide by 3 
+            $avg[3:0] = $avg_calc[3:0] ;// Divide by 3
+            $out[3:0] = $reset ? 4'b0 :( $valid ? $avg[3:0] : >>1$avg);
+            m5+sseg_decoder($segments_n, $out[3:0])
+            *uo_out = /keypad$sampling ? {4'b0, /keypad$sample_row_mask} : {1'b0 , ~ $segments_n};
+  
       m5+PmodKYPD(|pipe, /keypad, @0, $num[3:0], 1'b1, ['left:40, top: 80, width: 20, height: 20'])
       
-      @0
+      
          
-         $out[3:0] = $reset ? 4'b0 :( $valid ? $avg[3:0] : >>1$avg);
-         m5+sseg_decoder($segments_n, $out[3:0])
-         //*uo_out[7:0] = {1'b0 , ~ $segments_n} ;
-         *uo_out = /keypad$sampling ? {4'b0, /keypad$sample_row_mask} : {1'b0 , ~ $segments_n};
-   // Note that pipesignals assigned here can be found under /fpga_pins/fpga.
+          // Note that pipesignals assigned here can be found under /fpga_pins/fpga.
    
    
    
